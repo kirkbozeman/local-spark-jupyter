@@ -1,0 +1,15 @@
+services:
+  spark_local:
+    image: local-spark:latest
+    ports:
+      - "8890:8890"
+    volumes:
+      - ~:/mnt/local
+      - ~/.aws:/root/.aws
+    restart: unless-stopped
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
