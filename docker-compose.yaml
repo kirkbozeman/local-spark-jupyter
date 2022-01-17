@@ -2,7 +2,8 @@ services:
   spark_local:
     image: local-spark:latest
     ports:
-      - "8890:8890"
+      - 8890:8890
+      - 8080:8080
     volumes:
       - ~:/mnt/local
       - ~/.aws:/root/.aws

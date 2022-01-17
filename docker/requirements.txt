@@ -1,4 +1,5 @@
 boto3
-#pandas
+pandas
 s3fs
 jupyterlab
+findspark
