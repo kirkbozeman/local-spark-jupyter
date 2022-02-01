@@ -3,3 +3,4 @@ pandas
 s3fs
 jupyterlab
 findspark
+sparkmagic
