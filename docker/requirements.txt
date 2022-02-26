@@ -1,6 +1,22 @@
-boto3
-pandas
-s3fs
-jupyterlab
+# spark
 findspark
 sparkmagic
+delta-spark==1.1.0
+
+# aws
+boto3
+s3fs
+
+# data science
+numpy
+pandas
+pandasql
+jupyterlab
+
+# database
+sqlalchemy
+psycopg2-binary
+
+# misc
+pytz
+gsheets

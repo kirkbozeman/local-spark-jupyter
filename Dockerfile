@@ -1,14 +1,10 @@
 FROM ubuntu:18.04
-#FROM ubuntu:20.04
-#FROM python:3.10-slim-buster
-#FROM alpine:3.10
-
 USER root
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG spark_version="3.2.0"
+ARG spark_version="3.2.1"
 ARG hadoop_version="3.2"
-ARG spark_checksum="EBE51A449EBD070BE7D3570931044070E53C23076ABAD233B3C51D45A7C99326CF55805EE0D573E6EB7D6A67CFEF1963CD77D6DC07DD2FD70FD60DA9D1F79E5E"
+ARG spark_checksum="145ADACF189FECF05FBA3A69841D2804DD66546B11D14FC181AC49D89F3CB5E4FECD9B25F56F0AF767155419CD430838FB651992AEB37D3A6F91E7E009D1F9AE"
 ARG openjdk_version="11"
 ARG python_version="3.9"
 
@@ -21,7 +17,7 @@ RUN apt-get update -y && \
     "openjdk-${openjdk_version}-jre-headless" \
     software-properties-common \
     gcc python-dev libkrb5-dev npm \
-    curl wget vim git scala maven \
+    curl wget vim git maven sudo scala \
     ca-certificates-java
 
 # install nodejs 12 (req for sparkmagic)
@@ -40,8 +36,6 @@ ADD docker/requirements.txt /root/
 RUN apt install -y python3-pip python3-setuptools && \
     pip3 install --upgrade pip setuptools && \
     pip3 install -r /root/requirements.txt
-#    pip install -r /root/requirements.txt
-
 
 # install sparkmagic
 #ARG sparkmagic_kernel_path=/usr/local/lib/python3.9/dist-packages
@@ -54,24 +48,26 @@ RUN jupyter nbextension enable --py --sys-prefix widgetsnbextension && \
 
 #ADD sparkmagic/example_config.json /local/usr/jupyter-notebooks/.sparkmagic/config.json
 
-
-# Spark installation from local tgz
-#ADD docker/spark-3.2.0-bin-hadoop3.2.tgz /tmp/
-#RUN cp -a /tmp/spark-3.2.0-bin-hadoop3.2/. /usr/local/spark/ && \
-#    rm -r /tmp/spark-3.2.0-bin-hadoop3.2
-
-WORKDIR /usr/local
-
 # Spark installation
+WORKDIR /usr/local
 RUN wget -q "https://archive.apache.org/dist/spark/spark-${APACHE_SPARK_VERSION}/spark-${APACHE_SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz"
 RUN echo ${spark_checksum} *spark-${APACHE_SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz | sha512sum -c -
 RUN tar xzf spark-${APACHE_SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz
 RUN mv spark-${APACHE_SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} spark
 RUN rm -r spark-${APACHE_SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz
 
+# add jars
+WORKDIR /usr/local/spark/jars
+RUN wget -q "https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/${APACHE_SPARK_VERSION}/hadoop-aws-${APACHE_SPARK_VERSION}.jar" && \
+    wget -q "https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.166/aws-java-sdk-bundle-1.12.166.jar" && \
+    wget -q "https://repo1.maven.org/maven2/io/delta/delta-core_2.12/1.1.0/delta-core_2.12-1.1.0.jar" && \
+    wget -q "https://repo1.maven.org/maven2/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1.jar" && \
+    rm guava*.jar && wget -q "https://repo1.maven.org/maven2/com/google/guava/guava/31.0.1-jre/guava-31.0.1-jre.jar"
+
 # add test files
-ADD docker/vimas_merchant_address_20200825_003122.csv.gz /tmp/test.csv.gz
-ADD notebooks /usr/local/jupyter-notebooks
+#ADD docker/vimas_merchant_address_20200825_003122.csv.gz /tmp/test.csv.gz
+WORKDIR /usr/local/jupyter-notebooks
+ADD notebooks .
 
 # Configure Spark
 ENV SPARK_HOME=/usr/local/spark
@@ -79,11 +75,10 @@ ENV SPARK_OPTS="--driver-java-options=-Xms1024M --driver-java-options=-Xmx4096M 
     PATH="${PATH}:${SPARK_HOME}/bin" \
     PYSPARK_PYTHON=/usr/bin/python3
 
-EXPOSE 8890
+EXPOSE 8888
 EXPOSE 8080
+EXPOSE 4040
 
-COPY docker/bootstrap.sh /root/
+ADD docker/bootstrap.sh /root/
 RUN chmod +x /root/bootstrap.sh
 ENTRYPOINT ["/root/bootstrap.sh"]
-
-#ENTRYPOINT ["tail", "-f", "/dev/null"]
