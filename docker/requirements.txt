@@ -2,6 +2,7 @@
 findspark
 sparkmagic
 delta-spark==1.1.0
+pyspark_kernel
 
 # aws
 boto3

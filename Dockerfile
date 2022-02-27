@@ -35,14 +35,6 @@ RUN apt install -y python3-pip python3-setuptools && \
     pip3 install --upgrade pip setuptools && \
     pip3 install -r /root/requirements.txt
 
-####### install sparkmagic #######
-RUN jupyter nbextension enable --py --sys-prefix widgetsnbextension && \
-    jupyter labextension install "@jupyter-widgets/jupyterlab-manager" && \
-    jupyter-kernelspec install --user $(pip show sparkmagic | grep Location | cut -d" " -f2)/sparkmagic/kernels/sparkkernel && \
-    jupyter-kernelspec install --user $(pip show sparkmagic | grep Location | cut -d" " -f2)/sparkmagic/kernels/pysparkkernel && \
-    jupyter-kernelspec install --user $(pip show sparkmagic | grep Location | cut -d" " -f2)/sparkmagic/kernels/sparkrkernel && \
-    jupyter serverextension enable --py sparkmagic
-
 ####### install Spark #######
 WORKDIR /usr/local
 RUN wget -q "https://archive.apache.org/dist/spark/spark-${spark_version}/spark-${spark_version}-bin-hadoop${hadoop_version}.tgz"
@@ -62,6 +54,14 @@ ENV SPARK_HOME=/usr/local/spark
 ENV SPARK_OPTS="--driver-java-options=-Xms1024M --driver-java-options=-Xmx4096M --driver-java-options=-Dlog4j.logLevel=info" \
     PATH="${PATH}:${SPARK_HOME}/bin" \
     PYSPARK_PYTHON=/usr/bin/python3
+
+####### install sparkmagic #######
+RUN jupyter nbextension enable --py --sys-prefix widgetsnbextension && \
+    jupyter labextension install "@jupyter-widgets/jupyterlab-manager" && \
+    jupyter-kernelspec install --user $(pip show sparkmagic | grep Location | cut -d" " -f2)/sparkmagic/kernels/sparkkernel && \
+    jupyter-kernelspec install --user $(pip show sparkmagic | grep Location | cut -d" " -f2)/sparkmagic/kernels/pysparkkernel && \
+    jupyter-kernelspec install --user $(pip show sparkmagic | grep Location | cut -d" " -f2)/sparkmagic/kernels/sparkrkernel && \
+    jupyter serverextension enable --py sparkmagic
 
 # add test files
 #ADD docker/vimas_merchant_address_20200825_003122.csv.gz /tmp/test.csv.gz
