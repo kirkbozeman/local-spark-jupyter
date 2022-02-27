@@ -43,17 +43,20 @@ RUN tar xzf spark-${spark_version}-bin-hadoop${hadoop_version}.tgz
 RUN mv spark-${spark_version}-bin-hadoop${hadoop_version} spark
 RUN rm -r spark-${spark_version}-bin-hadoop${hadoop_version}.tgz
 
-WORKDIR /usr/local/spark/jars
+ENV SPARK_HOME=/usr/local/spark
+ENV SPARK_OPTS="--driver-java-options=-Xms1024M --driver-java-options=-Xmx4096M --driver-java-options=-Dlog4j.logLevel=info" \
+    PATH="${PATH}:${SPARK_HOME}/bin" \
+    PYSPARK_PYTHON=/usr/bin/python3
+
+ADD docker/spark-defaults.conf $SPARK_HOME/conf
+
+WORKDIR $SPARK_HOME/jars
 RUN wget -q "https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/${spark_version}/hadoop-aws-${spark_version}.jar" && \
     wget -q "https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.166/aws-java-sdk-bundle-1.12.166.jar" && \
     wget -q "https://repo1.maven.org/maven2/io/delta/delta-core_2.12/1.1.0/delta-core_2.12-1.1.0.jar" && \
     wget -q "https://repo1.maven.org/maven2/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1.jar" && \
     rm guava-*.jar && wget -q "https://repo1.maven.org/maven2/com/google/guava/guava/31.0.1-jre/guava-31.0.1-jre.jar"
 
-ENV SPARK_HOME=/usr/local/spark
-ENV SPARK_OPTS="--driver-java-options=-Xms1024M --driver-java-options=-Xmx4096M --driver-java-options=-Dlog4j.logLevel=info" \
-    PATH="${PATH}:${SPARK_HOME}/bin" \
-    PYSPARK_PYTHON=/usr/bin/python3
 
 ####### install sparkmagic #######
 RUN jupyter nbextension enable --py --sys-prefix widgetsnbextension && \
@@ -67,10 +70,6 @@ RUN jupyter nbextension enable --py --sys-prefix widgetsnbextension && \
 #ADD docker/vimas_merchant_address_20200825_003122.csv.gz /tmp/test.csv.gz
 WORKDIR /usr/local/jupyter-notebooks
 ADD notebooks .
-
-EXPOSE 8888
-EXPOSE 8080
-EXPOSE 4040
 
 ADD docker/bootstrap.sh /root/
 RUN chmod +x /root/bootstrap.sh
