@@ -12,6 +12,7 @@ services:
       - 18080:18080
       - 50070:50070
       - 9870:9870
+      - 8042:8042
     volumes:
       - ~:/usr/local/jupyter-notebooks/local
       - ~/.aws:/root/.aws

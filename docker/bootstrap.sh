@@ -18,6 +18,9 @@ hdfs dfs -mkdir /user/root  # will root work ???
 hdfs dfs -mkdir input
 hdfs dfs -put $HADOOP_HOME/etc/hadoop/*.xml input
 
+# start yarn
+start-yarn.sh
+
 # start spark
 $SPARK_HOME/sbin/start-master.sh
 $SPARK_HOME/sbin/start-history-server.sh
