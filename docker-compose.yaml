@@ -2,13 +2,19 @@ services:
   spark_local:
     image: local-spark:latest
     ports:
+      - 9000:9000
+      - 8990:8990
+      - 8998:8998
       - 8888:8888
+      - 8088:8088
       - 8080:8080
       - 4040:4040
+      - 18080:18080
+      - 50070:50070
+      - 9870:9870
     volumes:
       - ~:/usr/local/jupyter-notebooks/local
       - ~/.aws:/root/.aws
-    entrypoint: sh -c 'jupyter lab --ip=0.0.0.0 --port=8888 --NotebookApp.token='' --NotebookApp.password='' --allow-root --notebook-dir=/usr/local/jupyter-notebooks'
     restart: unless-stopped
     deploy:
       restart_policy:

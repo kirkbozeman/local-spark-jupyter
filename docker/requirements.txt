@@ -8,11 +8,21 @@ delta-spark==1.1.0
 boto3
 s3fs
 
-# data science
+# jupyter
+jupyterlab
+ipywidgets
+jupyterlab-git
+jupyterlab_github
+
+# data & data science
 numpy
 pandas
 pandasql
-jupyterlab
+pyarrow
+fastparquet
+#awswrangler
+pyhive
+matplotlib
 
 # database
 sqlalchemy
@@ -21,3 +31,4 @@ psycopg2-binary
 # misc
 pytz
 gsheets
+requests
