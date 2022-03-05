@@ -10,7 +10,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG hadoop_version="3.2.1"
 ARG spark_version="3.2.1"
 ARG spark_hadoop_version="3.2"
-ARG spark_checksum="145ADACF189FECF05FBA3A69841D2804DD66546B11D14FC181AC49D89F3CB5E4FECD9B25F56F0AF767155419CD430838FB651992AEB37D3A6F91E7E009D1F9AE"
+#ARG spark_checksum="145ADACF189FECF05FBA3A69841D2804DD66546B11D14FC181AC49D89F3CB5E4FECD9B25F56F0AF767155419CD430838FB651992AEB37D3A6F91E7E009D1F9AE"
+ARG spark_checksum="0923B887BFFE9CE984B41E730A0059D563D0EE429F4E8C74BE2DF98D0B441919EFF4CC3C43D79B131D3B914139DF4833AEE75280889643690E8C14A287552B40"
 ARG openjdk_version="11"
 ARG python_version="3.9"
 ARG livy_version="0.7.1"
@@ -89,7 +90,7 @@ ENV HADOOP_COMMON_HOME=$HADOOP_HOME
 ENV HADOOP_HDFS_HOME=$HADOOP_HOME
 ENV YARN_HOME=$HADOOP_HOME
 ENV HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
-ENV HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib"
+ENV HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib/native"
 ENV HDFS_NAMENODE_USER="root"
 ENV HDFS_DATANODE_USER="root"
 ENV HDFS_SECONDARYNAMENODE_USER="root"
@@ -111,11 +112,17 @@ RUN mkdir $HADOOP_HOME/logs
 #RUN start-dfs.sh
 
 ####### install Spark #######
-RUN wget -q "https://archive.apache.org/dist/spark/spark-${spark_version}/spark-${spark_version}-bin-hadoop${spark_hadoop_version}.tgz"
-RUN echo ${spark_checksum} *spark-${spark_version}-bin-hadoop${spark_hadoop_version}.tgz | sha512sum -c -
-RUN tar xzf spark-${spark_version}-bin-hadoop${spark_hadoop_version}.tgz
-RUN mv spark-${spark_version}-bin-hadoop${spark_hadoop_version} spark
-RUN rm -r spark-${spark_version}-bin-hadoop${spark_hadoop_version}.tgz
+#RUN wget -q "https://archive.apache.org/dist/spark/spark-${spark_version}/spark-${spark_version}-bin-hadoop${spark_hadoop_version}.tgz"
+#RUN echo ${spark_checksum} *spark-${spark_version}-bin-hadoop${spark_hadoop_version}.tgz | sha512sum -c -
+#RUN tar xzf spark-${spark_version}-bin-hadoop${spark_hadoop_version}.tgz
+#RUN mv spark-${spark_version}-bin-hadoop${spark_hadoop_version} spark
+#RUN rm -r spark-${spark_version}-bin-hadoop${spark_hadoop_version}.tgz
+
+RUN wget -q "https://dlcdn.apache.org/spark/spark-${spark_version}/spark-${spark_version}-bin-without-hadoop.tgz"
+RUN echo ${spark_checksum} *spark-${spark_version}-bin-without-hadoop.tgz | sha512sum -c -
+RUN tar xzf spark-${spark_version}-bin-without-hadoop.tgz
+RUN mv spark-${spark_version}-bin-without-hadoop spark
+RUN rm -r spark-${spark_version}-bin-without-hadoop.tgz
 
 ENV SPARK_HOME=/usr/local/spark
 ENV SPARK_OPTS="--driver-java-options=-Xms1024M --driver-java-options=-Xmx4096M --driver-java-options=-Dlog4j.logLevel=info" \
@@ -123,17 +130,23 @@ ENV SPARK_OPTS="--driver-java-options=-Xms1024M --driver-java-options=-Xmx4096M 
 #    PATH="${PATH}:${SPARK_HOME}/bin" \
 ENV PATH "$PATH:$SPARK_HOME/bin"
 ADD docker/spark/spark-defaults.conf $SPARK_HOME/conf
+ADD docker/spark/spark-env.sh $SPARK_HOME/conf
 
 RUN mkdir $SPARK_HOME/logs
 RUN mkdir $SPARK_HOME/spark-events
 
 WORKDIR $SPARK_HOME/jars
-RUN wget -q "https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/${spark_version}/hadoop-aws-${spark_version}.jar" && \
+RUN wget -q "https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/${hadoop_version}/hadoop-aws-${hadoop_version}.jar" && \
     wget -q "https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.166/aws-java-sdk-bundle-1.12.166.jar" && \
     wget -q "https://repo1.maven.org/maven2/io/delta/delta-core_2.12/1.1.0/delta-core_2.12-1.1.0.jar" && \
     wget -q "https://repo1.maven.org/maven2/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1.jar" && \
     wget -q "https://repo1.maven.org/maven2/io/minio/spark-select_2.11/2.1/spark-select_2.11-2.1.jar" && \
-    rm guava-*.jar && wget -q "https://repo1.maven.org/maven2/com/google/guava/guava/31.0.1-jre/guava-31.0.1-jre.jar"
+    wget -q "https://repo1.maven.org/maven2/com/google/guava/guava/31.0.1-jre/guava-31.0.1-jre.jar" && \
+    wget -q "https://repo1.maven.org/maven2/log4j/log4j/1.2.17/log4j-1.2.17.jar"
+#    rm guava-*.jar && wget -q "https://repo1.maven.org/maven2/com/google/guava/guava/31.0.1-jre/guava-31.0.1-jre.jar"  # rm not needed
+
+#RUN eval "sed -i -e '\$export SPARK_DIST_CLASSPATH=\$(hadoop classpath)' ${SPARK_HOME}/conf/spark-env.sh"
+
 
 ####### install livy #######
 WORKDIR $SPARK_HOME/livy
