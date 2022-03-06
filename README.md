@@ -16,7 +16,10 @@ Or just use:
 ```
 docker-compose up
 ```
-
+Useful:
+```
+jps
+```
 Hadoop!  
 ```
 hdfs dfsadmin -report
